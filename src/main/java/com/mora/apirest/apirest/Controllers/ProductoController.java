@@ -1,16 +1,15 @@
 package com.mora.apirest.apirest.Controllers;
 
-import java.util.List;
-
-import com.mora.apirest.apirest.ApirestApplication;
 import com.mora.apirest.apirest.Entities.Producto;
 import com.mora.apirest.apirest.Repositories.ProductoRepository;
+import com.mora.apirest.apirest.Services.ProductoService;
+
+import jakarta.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -18,55 +17,36 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 
 
-
-
-@RestController 
-@RequestMapping ("/productos")
+@RestController
+@RequestMapping("/productos")
 public class ProductoController {
-
-    private final ApirestApplication apirestApplication;
-    @Autowired  // Sirve para inyectar dependencias, en este caso el repositorio de productos
-    private ProductoRepository productoRepository; // Inyecta el repositorio de productos para poder acceder a la base de datos
-
-    ProductoController(ApirestApplication apirestApplication) {
-        this.apirestApplication = apirestApplication;
-    }
+    
+    @Autowired 
+    private ProductoService productoService;
 
     @GetMapping
     public List<Producto> getAllProductos(){
-        return productoRepository.findAll();
+        return productoService.obtenerTodos();
     }
 
     @GetMapping("/{id}")
     public Producto getProductoById(@PathVariable Long id){
-        return productoRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("No se encontro el producto con el Id: " + id));
+        return productoService.obtenerPorId(id);
     }
 
-    @PostMapping 
-    public Producto createProducto(@RequestBody Producto product){
-        return productoRepository.save(product);
+    @PostMapping
+    public Producto createProducto(@Valid @RequestBody Producto producto) {
+        return productoService.crearProducto(producto);
     }
 
     @PutMapping("/{id}")
-    public Producto updateProducto(@PathVariable Long id, @RequestBody Producto productoDetails){
-        Producto producto = productoRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("No se encontro el producto con el Id: " + id));
-    
-        producto.setNombre(productoDetails.getNombre());
-        producto.setPrecio(productoDetails.getPrecio());
-
-        return productoRepository.save(producto);
+    public Producto updateProducto(@PathVariable Long id, @Valid @RequestBody Producto producto) {
+        return productoService.actualizarProducto(id, producto);
     }
 
     @DeleteMapping("/{id}")
-    public String deleteProducto(@PathVariable Long id){
-        Producto producto = productoRepository.findById(id)
-        .orElseThrow(() -> new RuntimeException("No se encontro el producto con el Id: " + id));
-        productoRepository.delete(producto);
-        return "El producto con el Id: " + id + " fue eliminado correctamente";
-
+    public void deleteProducto(@PathVariable Long id){
+        productoService.eliminarProducto(id);
     }
-
     
 }
